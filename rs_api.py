@@ -123,7 +123,7 @@ class RsAPI(object):
         return build
 
     def run(self):
-        self.getAuthentication("johnnym", "27e9b5291e55547797392fdfe54f772f")
+        self.getAuthentication("user", "api_key")
         print self.tenant_id
         #self.available_os = self.buildDict(self.getOperatingSystems())
         #self.available_sizes = self.buildDict(self.getServerSizes())
