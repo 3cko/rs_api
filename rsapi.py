@@ -12,32 +12,62 @@ class RsAPI(object):
         self.tenant_id = None
         self.available_os = {}
         self.available_sizes = {}
+        self.services = {}
+        self.headers = {'token': {"X-Auth-Token": str(self.token_id)}}
+        self.extensions = {'getOS':'/images/detail',
+                           'getSizes':'/flavors',
+                           'getInstalledServers':'/servers/details',
+                           'GetCloudFilesContainers':'?format=json',
+                           }
+
+    def buildDictFromAuth(self, auth_data):
+        raw_dump = json.dumps(auth_data)
+        data = json.loads(raw_dump)
+
+        access = data['access']
+        services = access['serviceCatalog']
+
+        self.token_id = access['token']['id']
+        self.tenant_id = access['token']['tenant']['id']
+
+        for info_list in services:
+            for info in info_list['endpoints']:
+                if 'region' in info:
+                    if not info['region'] in self.services:
+                        self.services[info['region']] = [{info_list['name'] : info['publicURL']}]
+                    else:
+                        self.services[info['region']].append({info_list['name'] : info['publicURL']})
 
     def getAuthentication(self, user_name, api_key):
         """
         Get Authenticated with Rackspace so you can use the API.
         """
         auth_url = "https://identity.api.rackspacecloud.com/v2.0/tokens"
-        data = {"auth":{"RAX-KSKEY:apiKeyCredentials":{"username":user_name, "apiKey":api_key}}}
+        data = {"auth":
+            {"RAX-KSKEY:apiKeyCredentials":
+                {"username":user_name, "apiKey":api_key}}}
         headers = {'Content-type': 'application/json'}
-        request_auth = requests.post(auth_url, data=json.dumps(data), headers=headers)
+        request_auth = requests.post(auth_url,
+                                     data=json.dumps(data),
+                                     headers=headers)
         authenticated_data = request_auth.json()
 
-        """
-        token_id = authenticated_data['access']['token']['id']
-        tenant_id = authenticated_data['access']['token']['tenant']['id']
-        for lists in authenticated_data['access']:
-            for dicts in authenticated_data['access'][lists]:
-                if isinstance(dicts, dict):
-                    print dicts
-                    print "\n"
-        """
+        self.buildDictFromAuth(authenticated_data)
 
-        token_id = authenticated_data['access']['token']['id']
-        tenant_id = authenticated_data['access']['token']['tenant']['id']
+    def getCategoryUrl(self, key, dicts):
+        for value in dicts:
+            if key == value:
+                print dicts[value]['PublicURL']
 
-        self.token_id = token_id
-        self.tenant_id = tenant_id
+    def getExtensions(self, key):
+        pass
+
+    def getCategory(self, category):
+        """
+        {'category':{ url:foo.bar, headers: {x-auth-token: token_id }, data: { } } }
+        """
+        #for category in c
+        pass
 
     def getOperatingSystems(self):
         os_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/images/detail"
@@ -139,12 +169,12 @@ class RsAPI(object):
 
     def run(self):
         self.getAuthentication("user", "api_key")
-        print self.tenant_id
+        #print self.tenant_id
         #self.available_os = self.buildDict(self.getOperatingSystems())
         #self.available_sizes = self.buildDict(self.getServerSizes())
         #print self.available_os
         #print self.available_sizes
-        print self.createStaticPage()
+        #print self.createStaticPage()
 
 
 if __name__ == '__main__':
