@@ -13,12 +13,12 @@ class RsAPI(object):
         self.available_os = {}
         self.available_sizes = {}
         self.services = {}
-        self.headers = {'token': {"X-Auth-Token": str(self.token_id)}}
-        self.extensions = {'getOS':'/images/detail',
-                           'getSizes':'/flavors',
-                           'getInstalledServers':'/servers/details',
-                           'GetCloudFilesContainers':'?format=json',
-                           }
+        self.headers = {'token': {"X-Auth-Token": self.token_id}}
+        self.get_extensions = {'getOS':'/images/detail',
+                               'getSizes':'/flavors',
+                               'getInstalledServers':'/servers/details',
+                               'GetCloudFilesContainers':'?format=json',
+                               }
 
     def buildDictFromAuth(self, auth_data):
         raw_dump = json.dumps(auth_data)
@@ -27,8 +27,10 @@ class RsAPI(object):
         access = data['access']
         services = access['serviceCatalog']
 
-        self.token_id = access['token']['id']
-        self.tenant_id = access['token']['tenant']['id']
+        token_id = access['token']['id']
+        tenant_id = access['token']['tenant']['id']
+
+        self.token_id = token_id
 
         for info_list in services:
             for info in info_list['endpoints']:
@@ -53,21 +55,33 @@ class RsAPI(object):
         authenticated_data = request_auth.json()
 
         self.buildDictFromAuth(authenticated_data)
+        print self.getHeadersByType(['token'])
 
-    def getCategoryUrl(self, key, dicts):
-        for value in dicts:
-            if key == value:
-                print dicts[value]['PublicURL']
+    def getExtensions(self, path_key):
+        for key in self.get_extensions:
+            if key in path_key:
+                return self.get_extensions[key]
 
-    def getExtensions(self, key):
-        pass
-
-    def getCategory(self, category):
+    def getEndpointUrl(self, endpoint):
         """
         {'category':{ url:foo.bar, headers: {x-auth-token: token_id }, data: { } } }
         """
-        #for category in c
-        pass
+        urls = []
+        for region in self.services:
+            for url in self.services[region]:
+                if endpoint in url:
+                    urls.append(url[endpoint])
+        return urls
+
+    def getHeadersByType(self, list_of_headers):
+        for header_type in self.headers:
+            for header_needed in list_of_headers:
+                if header_needed in header_type:
+                    print self.headers[header_needed]
+
+    def getDetailsByEndpoint(self, endpoint, get_ext):
+        url = self.getEndpointUrl(endpoint) + self.getExtension(get_ext)
+        headers = self.getHeaders()
 
     def getOperatingSystems(self):
         os_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/images/detail"
