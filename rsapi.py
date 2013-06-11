@@ -13,7 +13,7 @@ class RsAPI(object):
         self.available_os = {}
         self.available_sizes = {}
         self.services = {}
-        self.headers = {'token': {"X-Auth-Token": self.token_id}}
+        self.headers = {'content' : {"Content-Type": "foobar"}}
         self.get_extensions = {'getOS':'/images/detail',
                                'getSizes':'/flavors',
                                'getInstalledServers':'/servers/details',
@@ -27,10 +27,9 @@ class RsAPI(object):
         access = data['access']
         services = access['serviceCatalog']
 
-        token_id = access['token']['id']
-        tenant_id = access['token']['tenant']['id']
-
-        self.token_id = token_id
+        self.token_id = access['token']['id']
+        self.tenant_id = access['token']['tenant']['id']
+        self.headers['token'] = {"X-Auth-Token": str(self.token_id)}
 
         for info_list in services:
             for info in info_list['endpoints']:
@@ -55,7 +54,7 @@ class RsAPI(object):
         authenticated_data = request_auth.json()
 
         self.buildDictFromAuth(authenticated_data)
-        print self.getHeadersByType(['token'])
+        print self.getDetailsByEndpoint('cloudServersOpenStack', ['token'], 'getOS', 'dfw')
 
     def getExtensions(self, path_key):
         for key in self.get_extensions:
@@ -74,14 +73,25 @@ class RsAPI(object):
         return urls
 
     def getHeadersByType(self, list_of_headers):
+        headers = {}
         for header_type in self.headers:
             for header_needed in list_of_headers:
                 if header_needed in header_type:
-                    print self.headers[header_needed]
+                    for real_header in self.headers[header_needed]:
+                        headers[real_header] = self.headers[header_needed][real_header]
+                        print headers
 
-    def getDetailsByEndpoint(self, endpoint, get_ext):
-        url = self.getEndpointUrl(endpoint) + self.getExtension(get_ext)
-        headers = self.getHeaders()
+        return headers
+
+    def getDetailsByEndpoint(self, endpoint, header_list, get_ext, region):
+        for url_to_use in self.getEndpointUrl(endpoint):
+            if region in url_to_use:
+                url = url_to_use + self.getExtensions(get_ext)
+        headers = self.getHeadersByType(header_list)
+        print headers
+        request_info = requests.get(url, headers=headers)
+        json_data = request_info.json()
+        return json_data
 
     def getOperatingSystems(self):
         os_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/images/detail"
