@@ -3,6 +3,7 @@
 
 import json
 import requests
+from pprint import pprint
 
 
 class RsAPI(object):
@@ -19,6 +20,10 @@ class RsAPI(object):
                                'getInstalledServers':'/servers/details',
                                'GetCloudFilesContainers':'?format=json',
                                }
+
+    def prettyPrint(self, json_data):
+        pretty = pprint(json_data)
+        return pretty
 
     def buildDictFromAuth(self, auth_data):
         raw_dump = json.dumps(auth_data)
@@ -54,7 +59,7 @@ class RsAPI(object):
         authenticated_data = request_auth.json()
 
         self.buildDictFromAuth(authenticated_data)
-        print self.getDetailsByEndpoint('cloudServersOpenStack', ['token'], 'getOS', 'dfw')
+        self.prettyPrint(self.getDetailsByEndpoint('cloudServersOpenStack', ['token'], 'getOS', 'dfw'))
 
     def getExtensions(self, path_key):
         for key in self.get_extensions:
@@ -79,7 +84,6 @@ class RsAPI(object):
                 if header_needed in header_type:
                     for real_header in self.headers[header_needed]:
                         headers[real_header] = self.headers[header_needed][real_header]
-                        print headers
 
         return headers
 
@@ -88,10 +92,11 @@ class RsAPI(object):
             if region in url_to_use:
                 url = url_to_use + self.getExtensions(get_ext)
         headers = self.getHeadersByType(header_list)
-        print headers
         request_info = requests.get(url, headers=headers)
         json_data = request_info.json()
-        return json_data
+        raw_dump = json.dumps(json_data)
+        formatted_json = json.loads(raw_dump)
+        return formatted_json
 
     def getOperatingSystems(self):
         os_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/images/detail"
