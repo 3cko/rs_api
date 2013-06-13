@@ -18,6 +18,7 @@ def ParseArgs():
                         help="Account's API key",
                         required=True,
                        )
+    """
     parser.add_argument('--name', '-n',
                         help="Server or Cluser name",
                        )
@@ -29,9 +30,17 @@ def ParseArgs():
                         help="Number of webnodes, OS and Size",
                         nargs=3,
                        )
+    """
+    parser.add_argument('--region', '-r',
+                        help="List details by region",
+                        required=True,
+                       )
     parser.add_argument('--cloud-files-list', '-cfl',
                         help="List CloudFiles Containers",
                         action="store_true",
+                       )
+    parser.add_argument('--container', '-c',
+                        help="List the files in the Cloud Files container",
                        )
     return parser.parse_args()
 
@@ -42,5 +51,9 @@ args = ParseArgs()
 api.getAuthentication(args.username, args.api_key)
 
 if args.cloud_files_list:
-    print 'hi'
-    print api.getCloudFilesContainers()
+    print "Cloud Files in " + args.region.upper()
+    if not args.container:
+        api.parseCloudFiles(api.getDetailsByEndpoint("cloudFiles", ['token'], 'GetCloudFilesContainers', args.region))
+    else:
+        container = '/' + args.container + '/'
+        api.parseCloudFilesInContainer(api.getDetailsByEndpoint("cloudFiles", ['token'], 'GetCloudFilesContainers', args.region, container))

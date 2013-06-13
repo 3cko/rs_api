@@ -25,9 +25,41 @@ class RsAPI(object):
         pretty = pprint(json_data)
         return pretty
 
-    def buildDictFromAuth(self, auth_data):
-        raw_dump = json.dumps(auth_data)
+    def convertBytesToMegs(self, bytes):
+        megs = float(bytes) / 1024 / 1024
+        return megs
+
+    def convertToJson(self, json_data):
+        raw_dump = json.dumps(json_data)
         data = json.loads(raw_dump)
+
+        return data
+
+    def parseJsonForOs(self, json_data):
+        OS_list = []
+        images = json_data['images']
+        for inc, k in enumerate(images):
+            for data in images[inc]:
+                if "name" in data:
+                    name = images[inc][data]
+                if "id" in data:
+                    id = images[inc][data]
+            print id + ' - ' + name
+
+    def parseCloudFiles(self, json_data):
+        data = self.convertToJson(json_data)
+
+        for row in data:
+            print row['name'] + ': ' + str(row['count']) + ' files - ' + \
+                str(self.convertBytesToMegs(row['bytes'])) + " Megs"
+
+    def parseCloudFilesInContainer(self, json_data):
+        data = self.convertToJson(json_data)
+        for row in data:
+            print row['name']
+
+    def buildDictFromAuth(self, auth_data):
+        data = self.convertToJson(auth_data)
 
         access = data['access']
         services = access['serviceCatalog']
@@ -59,7 +91,7 @@ class RsAPI(object):
         authenticated_data = request_auth.json()
 
         self.buildDictFromAuth(authenticated_data)
-        self.prettyPrint(self.getDetailsByEndpoint('cloudServersOpenStack', ['token'], 'getOS', 'dfw'))
+        #self.prettyPrint(self.getDetailsByEndpoint('cloudServersOpenStack', ['token'], 'getSizes', 'dfw'))
 
     def getExtensions(self, path_key):
         for key in self.get_extensions:
@@ -87,10 +119,10 @@ class RsAPI(object):
 
         return headers
 
-    def getDetailsByEndpoint(self, endpoint, header_list, get_ext, region):
+    def getDetailsByEndpoint(self, endpoint, header_list, get_ext, region, container=""):
         for url_to_use in self.getEndpointUrl(endpoint):
             if region in url_to_use:
-                url = url_to_use + self.getExtensions(get_ext)
+                url = url_to_use + container + self.getExtensions(get_ext)
         headers = self.getHeadersByType(header_list)
         request_info = requests.get(url, headers=headers)
         json_data = request_info.json()
@@ -98,36 +130,9 @@ class RsAPI(object):
         formatted_json = json.loads(raw_dump)
         return formatted_json
 
-    def getOperatingSystems(self):
-        os_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/images/detail"
-        os_headers = {"X-Auth-Token": str(self.token_id)}
-        request_os = requests.get(os_url, headers=os_headers)
-
-        returned_data = request_os.json()
-
-        return returned_data
-
-    def getServerSizes(self):
-        sizes_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/flavors"
-        sizes_headers = {"X-Auth-Token": str(self.token_id)}
-        request_sizes = requests.get(sizes_url, headers=sizes_headers)
-
-        returned_data = request_sizes.json()
-
-        return returned_data
-
-    def getCurrentServers(self):
-        current_url = "https://dfw.servers.api.rackspacecloud.com/v2/" + self.tenant_id + "/servers/detail"
-        current_headers = {"X-Auth-Token": str(self.token_id)}
-        request_current = requests.get(current_url, headers=current_headers)
-
-        returned_data = request_current.json()
-
-        return returned_data
-
     def getCloudFilesContainers(self):
         tenant_id = 'MossoCloudFS_b151b4a5-26c0-41ed-8e48-abec10814e8f'
-        containers_url = "https://storage101.dfw1.clouddrive.com/v1/" + tenant_id + "?format=json"
+        containers_url = "https://storage101.dfw1.clouddrive.com/v1/" + tenant_id + '/test/' + "?format=json"
         containers_headers = {"X-Auth-Token": str(self.token_id)}
         containers_data = {"content"}
         request_containers = requests.get(containers_url, headers=containers_headers)
@@ -198,13 +203,6 @@ class RsAPI(object):
 
     def run(self):
         self.getAuthentication("user", "api_key")
-        #print self.tenant_id
-        #self.available_os = self.buildDict(self.getOperatingSystems())
-        #self.available_sizes = self.buildDict(self.getServerSizes())
-        #print self.available_os
-        #print self.available_sizes
-        #print self.createStaticPage()
-
 
 if __name__ == '__main__':
     rs_api = RsAPI()
