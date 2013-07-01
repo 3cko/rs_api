@@ -17,7 +17,7 @@ class RsAPI(object):
         self.headers = {'content' : {"Content-Type": "foobar"}}
         self.get_extensions = {'getOS':'/images/detail',
                                'getSizes':'/flavors',
-                               'getInstalledServers':'/servers/details',
+                               'getInstalledServers':'/servers/detail',
                                'GetCloudFilesContainers':'?format=json',
                                }
 
@@ -57,6 +57,14 @@ class RsAPI(object):
         data = self.convertToJson(json_data)
         for row in data:
             print row['name']
+
+    def parseCurrentServers(self, json_data):
+        data = self.convertToJson(json_data)
+
+        for row in data:
+            status = row['status']
+            name = row['name']
+            created = row['created']
 
     def buildDictFromAuth(self, auth_data):
         data = self.convertToJson(auth_data)
@@ -119,10 +127,24 @@ class RsAPI(object):
 
         return headers
 
+    def getFirstGenServers(self, account, header_list):
+        url = 'https://servers.api.rackspacecloud.com/v1.0/' +\
+                account +\
+                self.getExtensions('getInstalledServers')
+        headers = self.getHeadersByType(header_list)
+        request_info = requests.get(url, headers=headers)
+        json_data = request_info.json()
+        raw_dump = json.dumps(json_data)
+        formatted_json = json.loads(raw_dump)
+        return formatted_json
+
     def getDetailsByEndpoint(self, endpoint, header_list, get_ext, region, container=""):
         for url_to_use in self.getEndpointUrl(endpoint):
             if region in url_to_use:
-                url = url_to_use + container + self.getExtensions(get_ext)
+                if container:
+                    url = url_to_use + container + self.getExtensions(get_ext)
+                else:
+                    url = url_to_use + self.getExtensions(get_ext)
         headers = self.getHeadersByType(header_list)
         request_info = requests.get(url, headers=headers)
         json_data = request_info.json()
