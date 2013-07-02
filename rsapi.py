@@ -27,7 +27,8 @@ class RsAPI(object):
 
     def convertBytesToMegs(self, bytes):
         megs = float(bytes) / 1024 / 1024
-        return megs
+        dec = "{0:.2f}".format(megs)
+        return dec
 
     def convertToJson(self, json_data):
         raw_dump = json.dumps(json_data)
@@ -50,21 +51,52 @@ class RsAPI(object):
         data = self.convertToJson(json_data)
 
         for row in data:
-            print row['name'] + ': ' + str(row['count']) + ' files - ' + \
-                str(self.convertBytesToMegs(row['bytes'])) + " Megs"
+            statement = "{0:<30} {1:^1} {2:^6} Files {1:^1} {3:<6} Megs".format(\
+                row['name'], '|', str(row['count']),\
+                str(self.convertBytesToMegs(row['bytes'])))
+            print statement
 
     def parseCloudFilesInContainer(self, json_data):
         data = self.convertToJson(json_data)
+        li = []
+        total_size = len(data)
+        total_cnt = 0
+        cnt = 0
         for row in data:
-            print row['name']
+            total_cnt += 1
+            if cnt < 3:
+                li.append(row['name'])
+                cnt += 1
+                if len(li) == 3:
+                    statement = "{1:<32} {0:^1} {2:<32} {0:^1} {3:<32}".format('|', li[0], li[1], li[2])
+                    cnt = 0
+                    li = []
+                    print statement
+                elif total_size == total_cnt and len(li) == 2:
+                    statement = "{1:<32} {0:^1} {2:<32}".format('|', li[0], li[1])
+                    cnt = 0
+                    li = []
+                    print statement
+                elif total_size == total_cnt and len(li) == 1:
+                    statement = "{0:<32}".format(li[0])
+                    print statement
 
     def parseCurrentServers(self, json_data):
         data = self.convertToJson(json_data)
 
-        for row in data:
-            status = row['status']
-            name = row['name']
-            created = row['created']
+        for row in data['servers']:
+            if 'status' in row:
+                status = row['status']
+            if 'name' in row:
+                name = row['name']
+            if 'created' in row:
+                created = row['created']
+            if 'accessIPv4' in row:
+                ip4 = row['accessIPv4']
+
+            statement = "{0:<50} {1: ^1} {2:^10} {1: ^2} {3:<16} {1: ^2} {4}".format(name, '|', status,
+                        ip4, created)
+            print statement
 
     def buildDictFromAuth(self, auth_data):
         data = self.convertToJson(auth_data)

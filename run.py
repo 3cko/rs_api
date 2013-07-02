@@ -69,6 +69,10 @@ if args.files:
         container = '/' + args.container + '/'
         api.parseCloudFilesInContainer(api.getDetailsByEndpoint("cloudFiles", ['token'], 'GetCloudFilesContainers', args.region, container))
 if args.next_gen:
-        api.prettyPrint(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getInstalledServers', args.region))
+        print "Cloud Servers in " + args.region.upper()
+        print '-' * 40
+        api.parseCurrentServers(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getInstalledServers', args.region))
 if args.first_gen:
         api.prettyPrint(api.getFirstGenServers(api.tenant_id, ['token']))
+
+print '\n'
