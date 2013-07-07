@@ -98,6 +98,34 @@ class RsAPI(object):
                         ip4, created)
             print statement
 
+    def parseOSList(self, json_data):
+        data = self.convertToJson(json_data)
+        for row in data['images']:
+            if 'active' in row['status'].lower():
+                name = row['name']
+                minRam = row['minRam']
+                id = row['id']
+                statement = "{0:<80} {1: ^2} MinRam: {2:^5} {1: ^2} ID: {3:<30}".format(
+                    name, '|', minRam, id)
+                print statement
+
+    def parseSizeList(self, json_data):
+        data = self.convertToJson(json_data)
+        for row in data['flavors']:
+            id = row['id']
+            name = row['name']
+            statement = "{0:<30} {1: ^2} Id: {2:<30}".format(
+                name, '|', id)
+            print statement
+
+    def parseCreationReturn(self, server_name, json_data):
+        data = self.convertToJson(json_data)
+        server = data['server']
+        for row in server:
+            statement = "{0:<30} {1: ^2} adminPass: {2:<18} {1:^2} ID: {3:<30}".format(
+                server_name, '|', server['adminPass'], server['id'])
+            return statement
+
     def buildDictFromAuth(self, auth_data):
         data = self.convertToJson(auth_data)
 
