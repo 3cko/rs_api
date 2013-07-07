@@ -91,8 +91,8 @@ if args.web_nodes:
         os = args.web_nodes[1]
         size = args.web_nodes[2]
         for node in range(int(nodes)):
-            server_name = 'WEB ' + "{0:02d} ".format(node + 1) + args.name
-            print api.createServer(server_name, os, size)
+            server_name = 'WEB' + "{0:02d}-".format(node + 1) + args.name.replace(' ', '_')
+            print api.parseCreationReturn(server_name, api.createServer(server_name, os, size))
 if args.database_nodes:
     if args.name:
         node_count = 0
@@ -100,5 +100,5 @@ if args.database_nodes:
         os = args.database_nodes[1]
         size = args.database_nodes[2]
         for node in range(int(nodes)):
-            server_name = 'DB ' + "{0:02d} ".format(node + 1) + args.name
-            print api.createServer(server_name, os, size)
+            server_name = 'DB' + "{0:02d}-".format(node + 1) + args.name.replace(' ', '_')
+            print api.parseCreationReturn(server_name, api.createServer(server_name, os, size))
