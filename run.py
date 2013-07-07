@@ -22,12 +22,12 @@ def ParseArgs():
                         help="Server or Cluser name",
                        )
     parser.add_argument('--web-nodes', '-wn',
-                        help="Number of webnodes, OS and Size",
+                        help="Number of web nodes, OS and Size",
                         nargs=3,
                         metavar=('nodes', 'OS', 'size'),
                        )
-    parser.add_argument('--mysql-nodes', '-mn',
-                        help="Number of webnodes, OS and Size",
+    parser.add_argument('--database-nodes', '-mn',
+                        help="Number of database nodes, OS and Size",
                         nargs=3,
                         metavar=('nodes', 'OS', 'size'),
                        )
@@ -81,7 +81,9 @@ if args.first_gen:
     api.prettyPrint(api.getFirstGenServers(api.tenant_id, ['token']))
 if args.list:
     if 'os' in args.list:
-        api.prettyPrint(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getOS', args.region))
+        api.parseOSList(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getOS', args.region))
+    elif 'sizes' in args.list:
+        api.parseSizeList(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getSizes', args.region))
 if args.web_nodes:
     if args.name:
         node_count = 0
@@ -90,4 +92,13 @@ if args.web_nodes:
         size = args.web_nodes[2]
         for node in range(int(nodes)):
             server_name = 'WEB ' + "{0:02d} ".format(node + 1) + args.name
+            print api.createServer(server_name, os, size)
+if args.database_nodes:
+    if args.name:
+        node_count = 0
+        nodes = args.database_nodes[0]
+        os = args.database_nodes[1]
+        size = args.database_nodes[2]
+        for node in range(int(nodes)):
+            server_name = 'DB ' + "{0:02d} ".format(node + 1) + args.name
             print api.createServer(server_name, os, size)
