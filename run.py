@@ -67,16 +67,34 @@ if args.files:
     if not args.container:
         print "Cloud Files in " + args.region.upper()
         print '-' * 40
-        api.parseCloudFiles(api.getDetailsByEndpoint("cloudFiles", ['token'], 'GetCloudFilesContainers', args.region))
+        #api.parseCloudFiles(api.getDetailsByEndpoint("cloudFiles",
+        #    ['token'], 'GetCloudFilesContainers', args.region))
+        containers = api.parseJson(api.getDetailsByEndpoint("cloudFiles",
+                ['token'], 'GetCloudFilesContainers', args.region),
+                ['bytes', 'count', 'name'])
+        for info in containers:
+            print "{0:<30} {1: ^1} Files: {2:^7} {1: ^2} Megs: {3:<16}".format(
+                    info['name'], '|', info['count'], info['bytes'])
+
     else:
         print "Cloud Files in " + args.container
         print '-' * 40
         container = '/' + args.container + '/'
-        api.parseCloudFilesInContainer(api.getDetailsByEndpoint("cloudFiles", ['token'], 'GetCloudFilesContainers', args.region, container))
+        api.parseCloudFilesInContainer(api.getDetailsByEndpoint("cloudFiles",
+            ['token'], 'GetCloudFilesContainers', args.region, container))
+
 if args.next_gen:
     print "Cloud Servers in " + args.region.upper()
     print '-' * 40
-    api.parseCurrentServers(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getInstalledServers', args.region))
+    servers = api.parseJson(api.getDetailsByEndpoint("cloudServersOpenStack",
+            ['token'], 'getInstalledServers', args.region),
+            ['servers', 'status', 'name', 'created', 'accessIPv4'])
+
+    for info in servers:
+        print "{0:<50} {1: ^1} {2:^10} {1: ^2} {3:<16} {1: ^2} {4}".format(
+                info['name'], '|', info['status'], info['accessIPv4'],
+                info['created'])
+
 if args.first_gen:
     api.prettyPrint(api.getFirstGenServers(api.tenant_id, ['token']))
 if args.list:

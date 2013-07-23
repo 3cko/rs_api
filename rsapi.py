@@ -36,6 +36,28 @@ class RsAPI(object):
 
         return data
 
+    def parseJson(self, json_data, return_list):
+        json = self.convertToJson(json_data)
+        matched_list = []
+        end_point = return_list[0]
+
+        if isinstance(json, dict):
+            for row in json[end_point]:
+                matched = {}
+                for match in return_list[1:]:
+                    if row[match]:
+                        matched[match] = row[match]
+                matched_list.append(matched)
+        else:
+            for row in json:
+                matched = {}
+                for match in return_list:
+                    if row[match]:
+                        matched[match] = row[match]
+                matched_list.append(matched)
+
+        return matched_list
+
     def parseJsonForOs(self, json_data):
         OS_list = []
         images = json_data['images']
