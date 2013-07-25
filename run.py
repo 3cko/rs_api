@@ -99,7 +99,16 @@ if args.first_gen:
     api.prettyPrint(api.getFirstGenServers(api.tenant_id, ['token']))
 if args.list:
     if 'os' in args.list:
-        api.parseOSList(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getOS', args.region))
+        #api.parseOSList(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getOS', args.region))
+        os = api.parseJson(api.getDetailsByEndpoint("cloudServersOpenStack", 
+                ['token'], 'getOS', args.region),
+                ['images', 'name', 'status', 'minRam', 'id'])
+
+        for info in os:
+            print "{0:<80} {1: ^1} {2:^10} {1: ^2} {3:<16} {1: ^2} {4}".format(
+                info['name'], '|', info['status'], info['minRam'],
+                info['id'])
+
     elif 'sizes' in args.list:
         api.parseSizeList(api.getDetailsByEndpoint("cloudServersOpenStack", ['token'], 'getSizes', args.region))
 if args.web_nodes:
